@@ -77,7 +77,7 @@ public class RecipeProcessor {
 
     @SubscribeEvent
     private void onRecipeAssembledEvent(RecipeAssembledEvent event) {
-        if (event.getOutput().get(net.minecraft.core.component.DataComponents.FOOD) == null) return;
+        if (!FoodDispatcher.isFood(event.getOutput())) return;
         process(event.getInputs(), event.getOutput(), event.getRecipeType());
     }
 

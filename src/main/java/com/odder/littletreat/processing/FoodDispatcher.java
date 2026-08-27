@@ -246,5 +246,12 @@ public class FoodDispatcher {
         if (next != null){
             ActiveModificationDefinition.removeActiveModification(next.getA(), next.getB());
         }
+
+        var server = event.getServer();
+        if (server.getTickCount() % 20 == 0) {
+            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                SyncModificationsPayload.syncToClient(player);
+            }
+        }
     }
 }

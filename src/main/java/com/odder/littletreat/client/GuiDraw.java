@@ -18,6 +18,7 @@ import net.neoforged.neoforge.client.ClientHooks;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -48,7 +49,7 @@ public class GuiDraw {
     public static void drawActiveModifications(Collection<ActiveModificationDefinition> mods, GuiGraphics gfx, int x, int y, boolean horizontal) {
         for(ActiveModificationDefinition activeModificationDefinition : mods) {
             // client state can get stale, skip drawing anything under zero (local state will be eventually correct)
-            if (activeModificationDefinition.remainingTicks < 0) continue;
+            if (activeModificationDefinition.remainingTicks <= 0) continue;
 
             if (horizontal) {
                 x += drawActiveModification(gfx, activeModificationDefinition, x, y);
@@ -109,7 +110,10 @@ public class GuiDraw {
                         .<Component>map(def -> Component.translatable(def.attribute().value().getDescriptionId()).append(": ").append(def.format()))
                         .toList();
 
-                gfx.renderTooltip(Minecraft.getInstance().font, modifiers, Optional.empty(), mouseX, mouseY);
+                String time = StringUtil.formatTickDuration(activeModificationDefinition.remainingTicks(), Minecraft.getInstance().level.tickRateManager().tickrate());
+                var outputs = new ArrayList<>(modifiers);
+                outputs.add(Component.literal(String.format("(%s)", time)).withStyle(ChatFormatting.GRAY));
+                gfx.renderTooltip(Minecraft.getInstance().font, outputs, Optional.empty(), mouseX, mouseY);
             }
 
             trackingY += k;

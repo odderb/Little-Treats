@@ -5,6 +5,7 @@ import com.odder.littletreat.command.TreatCommands;
 import com.odder.littletreat.init.Attachments;
 import com.odder.littletreat.init.DataComponents;
 import com.odder.littletreat.init.Registries;
+import com.odder.littletreat.payload.Registrar;
 import com.odder.littletreat.payload.SyncModificationsPayload;
 import com.odder.littletreat.player.HealthRegen;
 import com.odder.littletreat.processing.FoodDispatcher;
@@ -43,20 +44,11 @@ public class LittleTreat {
         Registries.LOOT_MODIFIER_SERIALIZERS.register(modEventBus);
 
         modEventBus.addListener(Registries::registerDatapackRegistries);
-        modEventBus.addListener(LittleTreat::registerPayloads);
+        modEventBus.addListener(Registrar::registerPayloads);
 
         NeoForge.EVENT_BUS.register(ClientCommands.class);
         NeoForge.EVENT_BUS.register(recipeProcessor);
         NeoForge.EVENT_BUS.addListener(TreatCommands::onRegisterCommands);
         NeoForge.EVENT_BUS.register(healthRegen);
-    }
-
-    private static void registerPayloads(RegisterPayloadHandlersEvent event) {
-        event.registrar("1")
-                .playToClient(
-                        SyncModificationsPayload.TYPE,
-                        SyncModificationsPayload.STREAM_CODEC,
-                        SyncModificationsPayload::handle
-                );
     }
 }
