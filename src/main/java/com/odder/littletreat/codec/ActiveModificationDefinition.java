@@ -20,6 +20,7 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class ActiveModificationDefinition{
@@ -54,6 +55,10 @@ public class ActiveModificationDefinition{
             player.setData(Attachments.ACTIVE_MODIFICATIONS, newSet);
             SyncModificationsPayload.syncToClient(player);
         }
+    }
+
+    public static void clearActiveModifications(ServerPlayer player) {
+        updateActiveModifications(Collections.emptyList(), player);
     }
 
     public static void updateActiveModifications(Collection<ActiveModificationDefinition> mods, ServerPlayer player) {

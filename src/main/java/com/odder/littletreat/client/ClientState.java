@@ -4,8 +4,10 @@ import com.odder.littletreat.Config;
 import com.odder.littletreat.codec.ActiveModificationDefinition;
 import com.odder.littletreat.codec.AttributeModificationDefinition;
 import com.odder.littletreat.processing.FoodDispatcher;
+import com.odder.littletreat.processing.FoodItemCache;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
 import net.minecraft.client.player.LocalPlayer;
@@ -25,9 +27,20 @@ public class ClientState {
     public static final ClientState INSTANCE = new ClientState();
 
     private List<ActiveModificationDefinition> active = new ArrayList<>();
+    private final FoodItemCache cache = new FoodItemCache();
+
+    private boolean regenTimerActive = false;
+    private int regenTimerElapsed = 0;
+    private int regenTimerInterval = 1;
 
     public void setActive(List<ActiveModificationDefinition> active) {
         this.active = active;
+    }
+
+    public void setRegenTimer(boolean active, int elapsed, int interval) {
+        regenTimerActive = active;
+        regenTimerElapsed = elapsed;
+        regenTimerInterval = interval;
     }
 
     public Collection<ActiveModificationDefinition> getActive() {
@@ -35,9 +48,23 @@ public class ClientState {
     }
 
     @SubscribeEvent
+    private void onRecipesReceived(RecipesUpdatedEvent ev) {
+        cache.rebuild(ev.getRecipeManager(), Minecraft.getInstance().getConnection().registryAccess());
+    }
+
+    @SubscribeEvent
     private void onRenderGuiLayer(RenderGuiLayerEvent.Pre event) {
-        if (Config.DISABLE_VANILLA_HUNGER.get() && event.getName().equals(VanillaGuiLayers.FOOD_LEVEL)) {
-            event.setCanceled(true);
+        if (Config.DISABLE_VANILLA_HUNGER.get()) {
+            if (event.getName().equals(VanillaGuiLayers.FOOD_LEVEL)) {
+                event.setCanceled(true);
+            }
+
+            Minecraft mc = Minecraft.getInstance();
+            boolean healthVisible = !mc.options.hideGui && mc.gameMode.canHurtPlayer();
+
+            if (event.getName().equals(VanillaGuiLayers.PLAYER_HEALTH) && regenTimerActive && healthVisible) {
+                GuiDraw.drawNaturalRegenProgress(event.getGuiGraphics(), (float) regenTimerElapsed / regenTimerInterval);
+            }
         }
     }
 
@@ -53,6 +80,10 @@ public class ClientState {
     private void onClientTick(ClientTickEvent.Post event) {
         for(ActiveModificationDefinition activeModificationDefinition : active) {
             activeModificationDefinition.remainingTicks--;
+        }
+
+        if (regenTimerActive && regenTimerElapsed < regenTimerInterval && !Minecraft.getInstance().isPaused()) {
+            regenTimerElapsed++;
         }
     }
 
@@ -72,9 +103,16 @@ public class ClientState {
     @SubscribeEvent
     private void onTooltip(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
-        List<AttributeModificationDefinition> mods = FoodDispatcher.collectModifications(stack);
+        List<AttributeModificationDefinition> mods = FoodDispatcher.collectModifications(stack, false);
 
-        if (mods.isEmpty()) return;
+        if (mods.isEmpty()) {
+            if (cache.isMeal(stack.getItemHolder())) {
+                Component input = Component.translatable("littletreat.tooltip.dynamic_food");
+                event.getToolTip().add(input);
+            }
+
+            return;
+        }
 
         for (AttributeModificationDefinition mod : mods) {
             Component value = mod.format();

@@ -78,7 +78,7 @@ public record AttributeModificationDefinition(
     }
 
     public static int getMaxDuration(Collection<AttributeModificationDefinition> defs) {
-        return defs.stream().map(def -> def.duration()).max(Integer::compareTo).orElse(0);
+        return defs.stream().map(AttributeModificationDefinition::duration).max(Integer::compareTo).orElse(0);
     }
 
     public AttributeModifier toModifier(Holder<Item> srcItem) {

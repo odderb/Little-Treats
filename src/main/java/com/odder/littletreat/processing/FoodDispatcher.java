@@ -11,14 +11,12 @@ import com.odder.littletreat.init.DataComponents;
 import com.odder.littletreat.init.Registries;
 import com.odder.littletreat.payload.SyncModificationsPayload;
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -34,12 +32,16 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class FoodDispatcher {
     public static final FoodDispatcher INSTANCE =  new FoodDispatcher();
 
-    private Queue<Tuple<ActiveModificationDefinition, ServerPlayer>> removals = new ArrayDeque<>();
-    private HashMap<ResourceLocation, List<FoodDefinition>> cachedDefinitions = new HashMap<>();
+    private final Queue<Tuple<ActiveModificationDefinition, ServerPlayer>> removals = new ArrayDeque<>();
+    private final HashMap<ResourceLocation, List<FoodDefinition>> cachedDefinitions = new HashMap<>();
+
+    private final List<FoodDefinition> orderedDefinitions = new ArrayList<>();
+    private final FoodItemCache itemCache = new FoodItemCache();
 
     public FoodDispatcher() {}
 
@@ -47,12 +49,20 @@ public class FoodDispatcher {
         return stack.get(net.minecraft.core.component.DataComponents.FOOD) != null;
     }
 
-    public static boolean isFood(Holder<Item> item) {
-        return item.is(Tags.Items.FOODS);
+    public static boolean isFood(Holder<Item> holder) {
+        return holder.is(Tags.Items.FOODS);
     }
 
     public static List<AttributeModificationDefinition> collectModifications(ItemStack eaten) {
+        return collectModifications(eaten, Config.PROVIDE_FALLBACK_MODIFIER.get());
+    }
+
+    public static List<AttributeModificationDefinition> collectModifications(ItemStack eaten, boolean withFallback) {
         List<AttributeModificationDefinition> modifications = new ArrayList<>();
+
+        if (!isFood(eaten)) {
+            return modifications;
+        }
 
         ResourceLocation loc = eaten.getItemHolder().getKey().location();
 
@@ -63,16 +73,11 @@ public class FoodDispatcher {
 
         modifications.addAll(eaten.getOrDefault(DataComponents.INHERITED_MODIFICATIONS, Collections.emptyList()));
 
-        if (Config.PROVIDE_FALLBACK_MODIFIER.get() && modifications.isEmpty()) {
-            var food = eaten.get(net.minecraft.core.component.DataComponents.FOOD);
-            if (food != null) {
-                modifications.add(new AttributeModificationDefinition(
-                        Attributes.MAX_HEALTH,
-                        Math.max(Math.round(food.saturation()*0.5f), 1),
-                        AttributeModifier.Operation.ADD_VALUE,
-                        Math.min(food.nutrition()*1200, 9600)
-                ));
-            }
+        if (modifications.isEmpty() && withFallback) {
+            var fallbacks = INSTANCE.getFallbackModifications(eaten);
+            modifications.addAll(fallbacks);
+
+            LittleTreat.LOGGER.debug("Item required fallback ({})", eaten.getItemHolder().getKey());
         }
 
         return modifications;
@@ -108,6 +113,17 @@ public class FoodDispatcher {
         progressPlayerTicks(player, Integer.MAX_VALUE);
     }
 
+    private List<AttributeModificationDefinition> getFallbackModifications(ItemStack stack) {
+        if (orderedDefinitions.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String normalizedName = stack.getDisplayName().getString().replace(" ", "_").toLowerCase();
+        int index = Math.floorMod(normalizedName.hashCode(), orderedDefinitions.size());
+
+        return orderedDefinitions.get(index).modifications();
+    }
+
     private boolean tryApplyModification(Holder<Item> src, AttributeModificationDefinition def, ServerPlayer player) {
         AttributeInstance attr = player.getAttribute(def.attribute());
 
@@ -140,13 +156,19 @@ public class FoodDispatcher {
 
     @SubscribeEvent
     private void onDatapackSync(OnDatapackSyncEvent event) {
-        RegistryAccess access = event.getPlayerList().getServer().registryAccess();
-        Registry<FoodDefinition> registry = access.registryOrThrow(Registries.FOOD_DEFINITIONS);
+        MinecraftServer server = event.getPlayerList().getServer();
+        RegistryAccess access = server.registryAccess();
+        var definitionsRegistry = access.registryOrThrow(Registries.FOOD_DEFINITIONS);
 
+        orderedDefinitions.clear();
         cachedDefinitions.clear();
 
-        for (var entry : registry.entrySet()) {
-            entry.getValue().getItems(access).forEach(item -> {
+        itemCache.rebuild(server.getRecipeManager(), access);
+
+        for (var entry : definitionsRegistry.entrySet()) {
+            var items = entry.getValue().getItems(access);
+
+            items.forEach(item -> {
                 ResourceLocation loc = item.getKey().location();
 
                 if (!cachedDefinitions.containsKey(loc)) {
@@ -155,6 +177,27 @@ public class FoodDispatcher {
 
                 cachedDefinitions.get(loc).add(entry.getValue());
             });
+
+            // Once per definition so each is equally likely as a fallback; skips definitions for absent mods
+            if (items.size() > 0) {
+                orderedDefinitions.add(entry.getValue());
+            }
+        }
+
+        HashSet<Holder<Item>> unassignedItems = new HashSet<>();
+        for (var ingredient : itemCache.getBasicIngredients()) {
+            var loc = ingredient.getKey().location();
+            if (cachedDefinitions.getOrDefault(loc, Collections.emptyList()).isEmpty()) {
+                unassignedItems.add(ingredient);
+            }
+        }
+
+        if (!unassignedItems.isEmpty()) {
+            LittleTreat.LOGGER.warn(
+                    "Found {} unassigned ingredients..\n{}",
+                    unassignedItems.size(),
+                    unassignedItems.stream().map(item ->
+                            item.getKey().location().toLanguageKey()).collect(Collectors.joining(", ")));
         }
 
         LittleTreat.LOGGER.debug("Rebuilt Little Treat item cache, {} items counted", cachedDefinitions.size());
@@ -236,7 +279,7 @@ public class FoodDispatcher {
     private void onPlayerDie(LivingDeathEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer serverPlayer)) return;
 
-        ActiveModificationDefinition.updateActiveModifications(new ArrayList<>(), serverPlayer);
+        ActiveModificationDefinition.clearActiveModifications(serverPlayer);
     }
 
     @SubscribeEvent

@@ -13,6 +13,12 @@ public class Registrar {
                 SyncModificationsPayload::handle
             );
 
+        reg.playToClient(
+                SyncRegenTimerPayload.TYPE,
+                SyncRegenTimerPayload.STREAM_CODEC,
+                SyncRegenTimerPayload::handle
+        );
+
         reg.playToServer(
                 RequestModificationSyncPayload.TYPE,
                 RequestModificationSyncPayload.STREAM_CODEC,

@@ -1,6 +1,7 @@
 package com.odder.littletreat.client;
 
 import com.odder.littletreat.Config;
+import com.odder.littletreat.LittleTreat;
 import com.odder.littletreat.codec.ActiveModificationDefinition;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class GuiDraw {
+    private static final ResourceLocation NATURAL_REGEN_BACKGROUND = ResourceLocation.fromNamespaceAndPath(LittleTreat.MODID, "textures/gui/natural-regen.png");
     private static final ResourceLocation EFFECT_BACKGROUND_UI = ResourceLocation.withDefaultNamespace("hud/effect_background");
     private static final ResourceLocation EFFECT_BACKGROUND_LARGE_SPRITE = ResourceLocation.withDefaultNamespace("container/inventory/effect_background_large");
     private static final ResourceLocation EFFECT_BACKGROUND_SMALL_SPRITE = ResourceLocation.withDefaultNamespace("container/inventory/effect_background_small");
@@ -39,11 +41,7 @@ public class GuiDraw {
      * @param progress 0.0 - 1.0
      */
     public static void drawDurationBar(GuiGraphics gfx, int x, int y, float progress, int width, int color) {
-        progress = Math.clamp(progress, 0.0f, 1.0f);
-        int usedWidth = (int) (width * progress);
-
-        gfx.fill(x, y, x + width, y + 2, 0xFF000000);
-        gfx.fill(x, y, x + usedWidth, y + 2, color);
+        drawDurationBarWithHeight(gfx, x, y, progress, width, 2, color);
     }
 
     public static void drawActiveModifications(Collection<ActiveModificationDefinition> mods, GuiGraphics gfx, int x, int y, boolean horizontal) {
@@ -118,6 +116,31 @@ public class GuiDraw {
 
             trackingY += k;
         }
+    }
+
+    /**
+     * Draws behind the first row of hearts. The bar sits on the free pixel row between the hearts and the
+     * experience bar, since armor and extra rows of hearts cover everything above them.
+     * @param progress 0.0 - 1.0, reaching 1.0 when the next heal happens
+     */
+    public static void drawNaturalRegenProgress(GuiGraphics gfx, float progress) {
+        int width = 81;
+        int height = 11;
+        int x = gfx.guiWidth() / 2 - 91;
+        int y = gfx.guiHeight() - 40;
+
+        gfx.blit(NATURAL_REGEN_BACKGROUND, x, y, 0, 0, width, height, width, height);
+
+        var clr = TreatUI.withFullAlpha(ChatFormatting.GREEN);
+        drawDurationBarWithHeight(gfx, x, y + height - 1, progress, width, 1, clr);
+    }
+
+    private static void drawDurationBarWithHeight(GuiGraphics gfx, int x, int y, float progress, int width, int height, int color) {
+        progress = Math.clamp(progress, 0.0f, 1.0f);
+        int usedWidth = (int) (width * progress);
+
+        gfx.fill(x, y, x + width, y + height, 0xFF000000);
+        gfx.fill(x, y, x + usedWidth, y + height, color);
     }
 
     private static boolean isMouseHoveringStatus(int mouseX, int mouseY, int x, int y, boolean drawLarge) {
