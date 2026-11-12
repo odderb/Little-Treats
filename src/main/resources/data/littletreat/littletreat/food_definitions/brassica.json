@@ -1,0 +1,10 @@
+{
+  "tag": "littletreat:food_types/brassica",
+  "modifications": [
+    {
+      "attribute": "puffish_attributes:ranged_damage",
+      "amount": 3,
+      "op": "add_value"
+    }
+  ]
+}

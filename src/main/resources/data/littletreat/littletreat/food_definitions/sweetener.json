@@ -1,0 +1,10 @@
+{
+  "tag": "littletreat:food_types/sweetener",
+  "modifications": [
+    {
+      "attribute": "minecraft:generic.movement_speed",
+      "amount": 0.1,
+      "op": "add_multiplied_base"
+    }
+  ]
+}

@@ -2,10 +2,6 @@ package com.odder.littletreat.processing;
 
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.odder.littletreat.LittleTreat;
-import com.odder.littletreat.codec.AttributeModificationDefinition;
-import com.odder.littletreat.codec.FoodDefinition;
-import com.odder.littletreat.init.DataComponents;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.loot.LootContext;
@@ -13,9 +9,10 @@ import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
 import net.neoforged.neoforge.common.loot.LootModifier;
 
-import java.util.Collection;
-import java.util.List;
-
+/**
+ * Stamps loot food with what its recipe would give. Eating works without this, but the stamp is what
+ * lets clients on a dedicated server show the stats in tooltips.
+ */
 public class ComposedFoodLootModifier extends LootModifier {
     public static final MapCodec<ComposedFoodLootModifier> CODEC = RecordCodecBuilder.mapCodec(inst ->
             LootModifier.codecStart(inst).apply(inst, ComposedFoodLootModifier::new));
@@ -26,15 +23,9 @@ public class ComposedFoodLootModifier extends LootModifier {
 
     @Override
     protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> items, LootContext lootContext) {
-        if (LittleTreat.recipeProcessor.recipeMaster == null) return items;
-
         for (ItemStack item : items) {
             if (FoodDispatcher.isFood(item)) {
-                List<FoodDefinition> appliedDefinitions = LittleTreat.recipeProcessor.recipeMaster.getPotentialFoodComposition(item.getItemHolder());
-                List<AttributeModificationDefinition> attrModifications = appliedDefinitions.stream().map(FoodDefinition::modifications).flatMap(Collection::stream).toList();
-                attrModifications = LittleTreat.recipeProcessor.getFlattenModifiers(attrModifications);
-                item.set(DataComponents.INHERITED_MODIFICATIONS, attrModifications);
-                LittleTreat.LOGGER.debug("detected food {}, modifying potential composition", item.getDisplayName().getString());
+                FoodDispatcher.applyRecipeComposition(item);
             }
         }
 

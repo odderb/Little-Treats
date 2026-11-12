@@ -1,5 +1,6 @@
 package com.odder.littletreat.init;
 
+import com.mojang.serialization.Codec;
 import com.odder.littletreat.LittleTreat;
 import com.odder.littletreat.codec.AttributeModificationDefinition;
 import net.minecraft.core.component.DataComponentType;
@@ -19,5 +20,13 @@ public class DataComponents {
                     DataComponentType.<List<AttributeModificationDefinition>>builder()
                             .networkSynchronized(AttributeModificationDefinition.STREAM_CODEC.apply(ByteBufCodecs.list()))
                             .persistent(AttributeModificationDefinition.CODEC.listOf())
+                            .build());
+
+    /** Total nutrition of the ingredients a food was made from */
+    public static final Supplier<DataComponentType<Integer>> INHERITED_NUTRITION =
+            COMPONENTS.register("inherited_nutrition", () ->
+                    DataComponentType.<Integer>builder()
+                            .networkSynchronized(ByteBufCodecs.VAR_INT)
+                            .persistent(Codec.INT)
                             .build());
 }

@@ -1,0 +1,10 @@
+{
+  "tag": "littletreat:food_types/taproot",
+  "modifications": [
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 1,
+      "op": "add_value"
+    }
+  ]
+}

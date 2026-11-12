@@ -11,10 +11,12 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import vectorwing.farmersdelight.common.block.entity.CookingPotBlockEntity;
 import vectorwing.farmersdelight.common.crafting.CookingPotRecipe;
 import vectorwing.farmersdelight.common.crafting.CuttingBoardRecipe;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 @Mixin(CookingPotRecipe.class)
 public abstract class CookingPotRecipeMixin {
@@ -22,6 +24,8 @@ public abstract class CookingPotRecipeMixin {
 
     @Inject(method = "assemble", at = @At("TAIL"))
     private void littletreat$assemble(RecipeWrapper inv, HolderLookup.Provider provider, CallbackInfoReturnable<ItemStack> cir) {
-        RecipeAssembledEvent.fromIngredients(inv, cir.getReturnValue(), getType()).post();
+        // The wrapper covers the pot's whole inventory, the slots after these hold finished meals
+        List<ItemStack> ingredients = IntStream.range(0, CookingPotBlockEntity.MEAL_DISPLAY_SLOT).mapToObj(inv::getItem).toList();
+        new RecipeAssembledEvent(ingredients, cir.getReturnValue(), getType()).post();
     }
 }

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ClientCommands {
     private static final HashSet<TagKey<Item>> requiredFoods = new HashSet<>(List.of(
@@ -112,38 +113,18 @@ public class ClientCommands {
     }
 
     private static void writeAudit(Collection<String> missing) {
-        String fileTemplate = """
-{
-  "items": "%s",
-  "modifications": [
-    {
-      "attribute": "minecraft:max_health",
-      "amount": 0.0,
-      "op": "add_value",
-      "duration": 1200
-    }
-  ]
-}
-        """;
+        // Written in tag format so entries can be pasted straight into a food type's tag
+        String entries = missing.stream()
+                .sorted()
+                .map("    { \"id\": \"%s\", \"required\": false }"::formatted)
+                .collect(Collectors.joining(",\n"));
 
-        for(String s : missing) {
-            ResourceLocation loc = ResourceLocation.parse(s);
-            Path writeDir = Minecraft.getInstance().gameDirectory.toPath().resolve(loc.getNamespace());
-            Path filePath = writeDir.resolve( loc.getPath().replace(':', '_').replace('/', '_') + ".json");
+        Path filePath = Minecraft.getInstance().gameDirectory.toPath().resolve("littletreat_untyped_items.json");
 
-            try {
-                if (!Files.exists(writeDir)) {
-                    Files.createDirectory(writeDir);
-                }
-
-                if (!Files.exists(filePath)) {
-                    Files.createFile(filePath);
-                }
-
-                Files.writeString(filePath, fileTemplate.formatted(s));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            Files.writeString(filePath, "{\n  \"values\": [\n" + entries + "\n  ]\n}\n");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }

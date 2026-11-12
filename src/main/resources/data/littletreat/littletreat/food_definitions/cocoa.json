@@ -1,13 +1,10 @@
 {
-  "items": [
-    "minecraft:cocoa_beans"
-  ],
+  "tag": "littletreat:food_types/cocoa",
   "modifications": [
     {
-      "attribute": "minecraft:player.mining_efficiency",
-      "amount": 0.1,
-      "op": "add_multiplied_base",
-      "duration": 3600
+      "attribute": "minecraft:generic.max_health",
+      "amount": 2,
+      "op": "add_value"
     }
   ]
 }

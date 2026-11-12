@@ -1,11 +1,10 @@
 {
-  "items": "croptopia:saguaro",
+  "tag": "littletreat:food_types/croptopia/saguaro",
   "modifications": [
     {
       "attribute": "minecraft:generic.max_health",
       "amount": 1,
-      "op": "add_value",
-      "duration": 10800
+      "op": "add_value"
     }
   ]
 }

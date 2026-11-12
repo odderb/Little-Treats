@@ -11,14 +11,14 @@ import com.odder.littletreat.init.DataComponents;
 import com.odder.littletreat.init.Registries;
 import com.odder.littletreat.payload.SyncModificationsPayload;
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -26,6 +26,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.util.thread.EffectiveSide;
 import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.event.OnDatapackSyncEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
@@ -38,48 +39,81 @@ import java.util.*;
 public class FoodDispatcher {
     public static final FoodDispatcher INSTANCE =  new FoodDispatcher();
 
-    private Queue<Tuple<ActiveModificationDefinition, ServerPlayer>> removals = new ArrayDeque<>();
-    private HashMap<ResourceLocation, List<FoodDefinition>> cachedDefinitions = new HashMap<>();
+    /** Eating anything in this tag removes every active food buff */
+    public static final TagKey<Item> CLEARS_FOOD_BUFFS = TagKey.create(
+            net.minecraft.core.registries.Registries.ITEM,
+            ResourceLocation.fromNamespaceAndPath(LittleTreat.MODID, "clears_food_buffs"));
+
+    private final Queue<Tuple<ActiveModificationDefinition, ServerPlayer>> removals = new ArrayDeque<>();
+
+    private final FoodItemCache itemCache = new FoodItemCache();
+    private final FoodStats stats = new FoodStats();
 
     public FoodDispatcher() {}
+
+    /**
+     * In singleplayer the client and server share this class, so each side reads its own copy
+     */
+    private static FoodStats currentStats() {
+        return EffectiveSide.get().isClient() ? ClientState.INSTANCE.getFoodStats() : INSTANCE.stats;
+    }
 
     public static boolean isFood(ItemStack stack) {
         return stack.get(net.minecraft.core.component.DataComponents.FOOD) != null;
     }
 
-    public static boolean isFood(Holder<Item> item) {
-        return item.is(Tags.Items.FOODS);
+    public static boolean isFood(Holder<Item> holder) {
+        return holder.is(Tags.Items.FOODS);
     }
 
     public static List<AttributeModificationDefinition> collectModifications(ItemStack eaten) {
         List<AttributeModificationDefinition> modifications = new ArrayList<>();
 
-        ResourceLocation loc = eaten.getItemHolder().getKey().location();
-
-        if (INSTANCE.cachedDefinitions.containsKey(loc)) {
-            var definitions = INSTANCE.cachedDefinitions.get(loc);
-            modifications.addAll(definitions.stream().map(FoodDefinition::modifications).flatMap(Collection::stream).toList());
+        if (!isFood(eaten)) {
+            return modifications;
         }
 
-        modifications.addAll(eaten.getOrDefault(DataComponents.INHERITED_MODIFICATIONS, Collections.emptyList()));
+        FoodStats stats = currentStats();
+        modifications.addAll(stats.getGroupModifications(eaten.getItem()));
 
-        if (Config.PROVIDE_FALLBACK_MODIFIER.get() && modifications.isEmpty()) {
-            var food = eaten.get(net.minecraft.core.component.DataComponents.FOOD);
-            if (food != null) {
-                modifications.add(new AttributeModificationDefinition(
-                        Attributes.MAX_HEALTH,
-                        Math.max(Math.round(food.saturation()*0.5f), 1),
-                        AttributeModifier.Operation.ADD_VALUE,
-                        Math.min(food.nutrition()*1200, 9600)
-                ));
-            }
+        // Crafted food carries its real ingredients, anything else falls back to what its recipe would give
+        int sourceNutrition;
+        if (eaten.has(DataComponents.INHERITED_MODIFICATIONS)) {
+            modifications.addAll(eaten.getOrDefault(DataComponents.INHERITED_MODIFICATIONS, Collections.emptyList()));
+            sourceNutrition = eaten.getOrDefault(DataComponents.INHERITED_NUTRITION, 0);
+        } else {
+            var composition = stats.findComposition(eaten.getItem());
+            composition.ifPresent(c -> modifications.addAll(c.modifications()));
+            sourceNutrition = composition.map(RecipeComposition.Composition::nutrition).orElse(0);
         }
 
-        return modifications;
+        // Falls back to the food's own nutrition when made from nothing edible, like bread from wheat
+        int nutrition = sourceNutrition > 0 ? sourceNutrition : getNutrition(eaten);
+
+        return AttributeModificationDefinition.keepEffective(modifications).stream()
+                .map(mod -> mod.withDefaultDuration(nutrition * Config.TICKS_PER_NUTRITION.get()))
+                .toList();
     }
 
-    public List<FoodDefinition> getDefinition(ItemStack item) {
-        return cachedDefinitions.getOrDefault(item.getItemHolder().getKey().location(), new ArrayList<>());
+    /**
+     * Stores what an uncrafted food's recipe would give onto the item itself, so clients can show it
+     */
+    public static void applyRecipeComposition(ItemStack stack) {
+        if (stack.has(DataComponents.INHERITED_MODIFICATIONS)) return;
+
+        INSTANCE.stats.findComposition(stack.getItem()).ifPresent(composition -> {
+            stack.set(DataComponents.INHERITED_MODIFICATIONS, composition.modifications());
+            stack.set(DataComponents.INHERITED_NUTRITION, composition.nutrition());
+        });
+    }
+
+    public static List<AttributeModificationDefinition> getGroupModifications(Item item) {
+        return currentStats().getGroupModifications(item);
+    }
+
+    public static int getNutrition(ItemStack stack) {
+        var food = stack.get(net.minecraft.core.component.DataComponents.FOOD);
+        return food == null ? 0 : food.nutrition();
     }
 
     /**
@@ -138,31 +172,48 @@ public class FoodDispatcher {
         return mods.stream().filter(mod -> mod.source.equals(holder)).findFirst().orElse(null);
     }
 
+    // Machines in loaded chunks can cook before anyone joins, so the lookup has to exist from the start
+    @SubscribeEvent
+    private void onServerStarted(ServerStartedEvent event) {
+        rebuildCaches(event.getServer());
+    }
+
     @SubscribeEvent
     private void onDatapackSync(OnDatapackSyncEvent event) {
-        RegistryAccess access = event.getPlayerList().getServer().registryAccess();
-        Registry<FoodDefinition> registry = access.registryOrThrow(Registries.FOOD_DEFINITIONS);
+        rebuildCaches(event.getPlayerList().getServer());
+    }
 
-        cachedDefinitions.clear();
+    private void rebuildCaches(MinecraftServer server) {
+        RegistryAccess access = server.registryAccess();
 
-        for (var entry : registry.entrySet()) {
-            entry.getValue().getItems(access).forEach(item -> {
-                ResourceLocation loc = item.getKey().location();
+        itemCache.rebuild(server.getRecipeManager(), access);
+        stats.rebuild(server.getRecipeManager(), access);
 
-                if (!cachedDefinitions.containsKey(loc)) {
-                    cachedDefinitions.put(loc, new ArrayList<>());
-                }
+        warnUnassigned("ingredients", itemCache.getBasicIngredients());
+        warnUnassigned("edible items with no recipe", itemCache.getUncraftedFoods(access));
 
-                cachedDefinitions.get(loc).add(entry.getValue());
-            });
+        LittleTreat.LOGGER.debug("Rebuilt Little Treat item cache, {} items counted", stats.size());
+    }
+
+    private void warnUnassigned(String description, Collection<Holder<Item>> items) {
+        List<String> unassigned = items.stream()
+                .map(item -> item.getKey().location())
+                .filter(loc -> !stats.hasGroup(loc))
+                .map(ResourceLocation::toString)
+                .sorted()
+                .toList();
+
+        if (!unassigned.isEmpty()) {
+            LittleTreat.LOGGER.warn("Found {} unassigned {}..\n{}", unassigned.size(), description, String.join(", ", unassigned));
         }
-
-        LittleTreat.LOGGER.debug("Rebuilt Little Treat item cache, {} items counted", cachedDefinitions.size());
     }
 
     @SubscribeEvent
     private void onStart(PlayerInteractEvent.RightClickItem event) {
         if (!isFood(event.getItemStack())) return;
+
+        // Doesn't take up a slot, and needs to work when they're all full
+        if (event.getItemStack().is(CLEARS_FOOD_BUFFS)) return;
 
         Collection<ActiveModificationDefinition> mods = EffectiveSide.get().isClient()
                 ? ClientState.INSTANCE.getActive()
@@ -184,6 +235,11 @@ public class FoodDispatcher {
         if (!(event.getEntity() instanceof ServerPlayer serverPlayer)) return;
         if (!isFood(event.getItem())) return;
 
+        if (event.getItem().is(CLEARS_FOOD_BUFFS)) {
+            clearAllBuffs(serverPlayer);
+            return;
+        }
+
         ActiveModificationDefinition activeMod = getActiveModificationForFood(event.getItem().getItemHolder(), serverPlayer);
 
         // refreshes the duration, keys on food not attributes
@@ -202,6 +258,8 @@ public class FoodDispatcher {
         }
 
         List<AttributeModificationDefinition> modifications = collectModifications(event.getItem());
+
+        if (modifications.isEmpty()) return;
 
         applyModifications(
                 event.getItem().getItemHolder(),
@@ -236,7 +294,7 @@ public class FoodDispatcher {
     private void onPlayerDie(LivingDeathEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer serverPlayer)) return;
 
-        ActiveModificationDefinition.updateActiveModifications(new ArrayList<>(), serverPlayer);
+        ActiveModificationDefinition.clearActiveModifications(serverPlayer);
     }
 
     @SubscribeEvent
@@ -245,6 +303,13 @@ public class FoodDispatcher {
 
         if (next != null){
             ActiveModificationDefinition.removeActiveModification(next.getA(), next.getB());
+        }
+
+        var server = event.getServer();
+        if (server.getTickCount() % 20 == 0) {
+            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                SyncModificationsPayload.syncToClient(player);
+            }
         }
     }
 }

@@ -1,0 +1,10 @@
+{
+  "tag": "littletreat:food_types/stalk",
+  "modifications": [
+    {
+      "attribute": "puffish_attributes:jump",
+      "amount": 0.5,
+      "op": "add_multiplied_total"
+    }
+  ]
+}

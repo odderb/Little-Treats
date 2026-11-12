@@ -1,25 +1,20 @@
 {
-  "items": [
-    "minecraft:spider_eye"
-  ],
+  "tag": "littletreat:food_types/spider_eye",
   "modifications": [
     {
       "attribute": "minecraft:generic.scale",
       "amount": -0.4,
-      "op": "add_multiplied_base",
-      "duration": 1200
+      "op": "add_multiplied_base"
     },
     {
       "attribute": "minecraft:player.sneaking_speed",
       "amount": 0.4,
-      "op": "add_value",
-      "duration": 1200
+      "op": "add_value"
     },
     {
       "attribute": "minecraft:generic.max_health",
       "amount": -4,
-      "op": "add_value",
-      "duration": 1200
+      "op": "add_value"
     }
   ]
 }

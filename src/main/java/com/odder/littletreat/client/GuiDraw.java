@@ -1,6 +1,7 @@
 package com.odder.littletreat.client;
 
 import com.odder.littletreat.Config;
+import com.odder.littletreat.LittleTreat;
 import com.odder.littletreat.codec.ActiveModificationDefinition;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
@@ -11,6 +12,7 @@ import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -18,16 +20,19 @@ import net.neoforged.neoforge.client.ClientHooks;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 public class GuiDraw {
+    private static final ResourceLocation NATURAL_REGEN_BACKGROUND = ResourceLocation.fromNamespaceAndPath(LittleTreat.MODID, "textures/gui/natural-regen.png");
     private static final ResourceLocation EFFECT_BACKGROUND_UI = ResourceLocation.withDefaultNamespace("hud/effect_background");
     private static final ResourceLocation EFFECT_BACKGROUND_LARGE_SPRITE = ResourceLocation.withDefaultNamespace("container/inventory/effect_background_large");
     private static final ResourceLocation EFFECT_BACKGROUND_SMALL_SPRITE = ResourceLocation.withDefaultNamespace("container/inventory/effect_background_small");
     private static final ResourceLocation HEADER_SEPARATOR = ResourceLocation.withDefaultNamespace("textures/gui/header_separator.png");
     private static final int BACKGROUND_SPRITE_SIZE = 24;
+    private static final long REGEN_SCROLL_MS_PER_PIXEL = 120;
 
     /**
      * Draws a bar similar to durability, but takes in a progress amount (0.0 - 1.0) to
@@ -38,17 +43,13 @@ public class GuiDraw {
      * @param progress 0.0 - 1.0
      */
     public static void drawDurationBar(GuiGraphics gfx, int x, int y, float progress, int width, int color) {
-        progress = Math.clamp(progress, 0.0f, 1.0f);
-        int usedWidth = (int) (width * progress);
-
-        gfx.fill(x, y, x + width, y + 2, 0xFF000000);
-        gfx.fill(x, y, x + usedWidth, y + 2, color);
+        drawDurationBarWithHeight(gfx, x, y, progress, width, 2, color);
     }
 
     public static void drawActiveModifications(Collection<ActiveModificationDefinition> mods, GuiGraphics gfx, int x, int y, boolean horizontal) {
         for(ActiveModificationDefinition activeModificationDefinition : mods) {
             // client state can get stale, skip drawing anything under zero (local state will be eventually correct)
-            if (activeModificationDefinition.remainingTicks < 0) continue;
+            if (activeModificationDefinition.remainingTicks <= 0) continue;
 
             if (horizontal) {
                 x += drawActiveModification(gfx, activeModificationDefinition, x, y);
@@ -109,11 +110,53 @@ public class GuiDraw {
                         .<Component>map(def -> Component.translatable(def.attribute().value().getDescriptionId()).append(": ").append(def.format()))
                         .toList();
 
-                gfx.renderTooltip(Minecraft.getInstance().font, modifiers, Optional.empty(), mouseX, mouseY);
+                String time = StringUtil.formatTickDuration(activeModificationDefinition.remainingTicks(), Minecraft.getInstance().level.tickRateManager().tickrate());
+                var outputs = new ArrayList<>(modifiers);
+                outputs.add(Component.literal(String.format("(%s)", time)).withStyle(ChatFormatting.GRAY));
+                gfx.renderTooltip(Minecraft.getInstance().font, outputs, Optional.empty(), mouseX, mouseY);
             }
 
             trackingY += k;
         }
+    }
+
+    /**
+     * Draws behind the first row of hearts. The background is masked horizontally to the health natural regen
+     * can reach, and scrolls vertically in place (the texture should tile vertically). The bar sits on the free
+     * pixel row between the hearts and the experience bar, since armor and extra rows of hearts cover everything above them.
+     * @param regenCap the health natural regen can heal up to
+     * @param progress 0.0 - 1.0, reaching 1.0 when the next heal happens, negative to hide the bar
+     */
+    public static void drawNaturalRegenProgress(GuiGraphics gfx, float regenCap, float progress) {
+        int width = 81;
+        int height = 11;
+        int x = gfx.guiWidth() / 2 - 91;
+        int y = gfx.guiHeight() - 40;
+
+        // Hearts are 9px wide, placed every 8px, and each one is 2 health: every point of health adds 4px
+        int maskedWidth = regenCap <= 0 ? 0 : Math.min(width, Mth.floor(regenCap) * 4 + 1);
+
+        if (maskedWidth > 0) {
+            // Blit clamps UVs instead of wrapping, so draw the scrolled texture as two slices
+            int scroll = (int) ((Util.getMillis() / REGEN_SCROLL_MS_PER_PIXEL) % height);
+            gfx.blit(NATURAL_REGEN_BACKGROUND, x, y, 0, scroll, maskedWidth, height - scroll, width, height);
+            if (scroll > 0) {
+                gfx.blit(NATURAL_REGEN_BACKGROUND, x, y + height - scroll, 0, 0, maskedWidth, scroll, width, height);
+            }
+        }
+
+        if (progress >= 0.0f) {
+            var clr = TreatUI.withFullAlpha(ChatFormatting.GREEN);
+            drawDurationBarWithHeight(gfx, x, y + height - 1, progress, width, 1, clr);
+        }
+    }
+
+    private static void drawDurationBarWithHeight(GuiGraphics gfx, int x, int y, float progress, int width, int height, int color) {
+        progress = Math.clamp(progress, 0.0f, 1.0f);
+        int usedWidth = (int) (width * progress);
+
+        gfx.fill(x, y, x + width, y + height, 0xFF000000);
+        gfx.fill(x, y, x + usedWidth, y + height, color);
     }
 
     private static boolean isMouseHoveringStatus(int mouseX, int mouseY, int x, int y, boolean drawLarge) {

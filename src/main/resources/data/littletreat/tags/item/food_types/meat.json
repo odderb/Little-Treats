@@ -1,0 +1,18 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:porkchop",
+    "minecraft:chicken",
+    "minecraft:beef",
+    "minecraft:mutton",
+    "minecraft:rabbit",
+    {
+      "id": "#c:foods/raw_meat",
+      "required": false
+    },
+    {
+      "id": "croptopia:raw_ravager_meat",
+      "required": false
+    }
+  ]
+}

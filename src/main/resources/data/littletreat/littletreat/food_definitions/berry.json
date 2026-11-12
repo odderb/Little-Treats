@@ -1,0 +1,10 @@
+{
+  "tag": "littletreat:food_types/berry",
+  "modifications": [
+    {
+      "attribute": "minecraft:generic.knockback_resistance",
+      "amount": 1,
+      "op": "add_value"
+    }
+  ]
+}

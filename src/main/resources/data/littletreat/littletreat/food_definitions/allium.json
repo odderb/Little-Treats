@@ -1,0 +1,10 @@
+{
+  "tag": "littletreat:food_types/allium",
+  "modifications": [
+    {
+      "attribute": "puffish_attributes:mining_speed",
+      "amount": 0.1,
+      "op": "add_multiplied_total"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#c:nuts",
+      "required": false
+    },
+    {
+      "id": "croptopia:almond",
+      "required": false
+    },
+    {
+      "id": "croptopia:cashew",
+      "required": false
+    },
+    {
+      "id": "croptopia:peanut",
+      "required": false
+    },
+    {
+      "id": "croptopia:pecan",
+      "required": false
+    }
+  ]
+}
