@@ -1,0 +1,10 @@
+{
+  "tag": "littletreat:food_types/brew",
+  "modifications": [
+    {
+      "attribute": "puffish_attributes:sprinting_speed",
+      "amount": 1,
+      "op": "add_multiplied_total"
+    }
+  ]
+}

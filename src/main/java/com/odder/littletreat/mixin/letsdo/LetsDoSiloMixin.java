@@ -1,29 +1,20 @@
 package com.odder.littletreat.mixin.letsdo;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.odder.littletreat.event.RecipeAssembledEvent;
-import com.odder.littletreat.processing.RecipeProcessor;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.satisfy.farm_and_charm.core.recipe.SiloRecipe;
+import net.satisfy.farm_and_charm.core.block.entity.SiloBlockEntity;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Arrays;
-import java.util.List;
-
-@Mixin(SiloRecipe.class)
+@Mixin(SiloBlockEntity.class)
 public abstract class LetsDoSiloMixin {
-    @Shadow
-    abstract RecipeType<?> getType();
-    @Shadow private Ingredient input;
-
-    @Inject(method = "getResultItem", at = @At("TAIL"))
-    private void littletreat$getResultItem(HolderLookup.Provider provider, CallbackInfoReturnable<ItemStack> ci) {
-        RecipeAssembledEvent.fromIngredients(List.of(input), ci.getReturnValue(), RecipeType.CRAFTING).post();
+    // The second stack in scope is the one just taken out of the silo to be dried
+    @ModifyExpressionValue(method = "dry", at = @At(value = "INVOKE", target = "Lnet/satisfy/farm_and_charm/core/recipe/SiloRecipe;getResultItem(Lnet/minecraft/core/HolderLookup$Provider;)Lnet/minecraft/world/item/ItemStack;"))
+    private ItemStack littletreat$getResultItem(ItemStack output, @Local(ordinal = 1) ItemStack input) {
+        RecipeAssembledEvent.fromIngredient(input, output, RecipeType.CRAFTING).post();
+        return output;
     }
 }

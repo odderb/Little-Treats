@@ -1,0 +1,25 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "croptopia:lemon",
+      "required": false
+    },
+    {
+      "id": "croptopia:lime",
+      "required": false
+    },
+    {
+      "id": "croptopia:orange",
+      "required": false
+    },
+    {
+      "id": "croptopia:kumquat",
+      "required": false
+    },
+    {
+      "id": "croptopia:grapefruit",
+      "required": false
+    }
+  ]
+}

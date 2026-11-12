@@ -1,0 +1,18 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:melon_slice",
+    {
+      "id": "#c:crops/melon",
+      "required": false
+    },
+    {
+      "id": "croptopia:cantaloupe",
+      "required": false
+    },
+    {
+      "id": "croptopia:honeydew",
+      "required": false
+    }
+  ]
+}

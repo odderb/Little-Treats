@@ -1,10 +1,14 @@
 {
   "required": true,
   "package": "com.odder.littletreat.mixin.letsdo",
-  "plugin": "com.odder.littletreat.plugins.ClassValidationMixinPlugin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "LetsDoRoasterBlockEntityMixin"
+    "LetsDoCookingPotMixin",
+    "LetsDoCraftingBowlMixin",
+    "LetsDoMincerMixin",
+    "LetsDoRoasterBlockEntityMixin",
+    "LetsDoSiloMixin",
+    "LetsDoStoveMixin"
   ],
   "injectors": {
     "defaultRequire": 1

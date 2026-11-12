@@ -1,0 +1,15 @@
+{
+  "tag": "littletreat:food_types/pome_fruit",
+  "modifications": [
+    {
+      "attribute": "puffish_attributes:healing",
+      "amount": 1,
+      "op": "add_value"
+    },
+    {
+      "attribute": "puffish_attributes:magic_resistance",
+      "amount": 1,
+      "op": "add_value"
+    }
+  ]
+}

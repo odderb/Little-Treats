@@ -1,0 +1,10 @@
+{
+  "tag": "littletreat:food_types/fish",
+  "modifications": [
+    {
+      "attribute": "minecraft:generic.oxygen_bonus",
+      "amount": 1,
+      "op": "add_value"
+    }
+  ]
+}

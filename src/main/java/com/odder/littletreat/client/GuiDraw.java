@@ -12,6 +12,7 @@ import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -31,6 +32,7 @@ public class GuiDraw {
     private static final ResourceLocation EFFECT_BACKGROUND_SMALL_SPRITE = ResourceLocation.withDefaultNamespace("container/inventory/effect_background_small");
     private static final ResourceLocation HEADER_SEPARATOR = ResourceLocation.withDefaultNamespace("textures/gui/header_separator.png");
     private static final int BACKGROUND_SPRITE_SIZE = 24;
+    private static final long REGEN_SCROLL_MS_PER_PIXEL = 120;
 
     /**
      * Draws a bar similar to durability, but takes in a progress amount (0.0 - 1.0) to
@@ -119,20 +121,34 @@ public class GuiDraw {
     }
 
     /**
-     * Draws behind the first row of hearts. The bar sits on the free pixel row between the hearts and the
-     * experience bar, since armor and extra rows of hearts cover everything above them.
-     * @param progress 0.0 - 1.0, reaching 1.0 when the next heal happens
+     * Draws behind the first row of hearts. The background is masked horizontally to the health natural regen
+     * can reach, and scrolls vertically in place (the texture should tile vertically). The bar sits on the free
+     * pixel row between the hearts and the experience bar, since armor and extra rows of hearts cover everything above them.
+     * @param regenCap the health natural regen can heal up to
+     * @param progress 0.0 - 1.0, reaching 1.0 when the next heal happens, negative to hide the bar
      */
-    public static void drawNaturalRegenProgress(GuiGraphics gfx, float progress) {
+    public static void drawNaturalRegenProgress(GuiGraphics gfx, float regenCap, float progress) {
         int width = 81;
         int height = 11;
         int x = gfx.guiWidth() / 2 - 91;
         int y = gfx.guiHeight() - 40;
 
-        gfx.blit(NATURAL_REGEN_BACKGROUND, x, y, 0, 0, width, height, width, height);
+        // Hearts are 9px wide, placed every 8px, and each one is 2 health: every point of health adds 4px
+        int maskedWidth = regenCap <= 0 ? 0 : Math.min(width, Mth.floor(regenCap) * 4 + 1);
 
-        var clr = TreatUI.withFullAlpha(ChatFormatting.GREEN);
-        drawDurationBarWithHeight(gfx, x, y + height - 1, progress, width, 1, clr);
+        if (maskedWidth > 0) {
+            // Blit clamps UVs instead of wrapping, so draw the scrolled texture as two slices
+            int scroll = (int) ((Util.getMillis() / REGEN_SCROLL_MS_PER_PIXEL) % height);
+            gfx.blit(NATURAL_REGEN_BACKGROUND, x, y, 0, scroll, maskedWidth, height - scroll, width, height);
+            if (scroll > 0) {
+                gfx.blit(NATURAL_REGEN_BACKGROUND, x, y + height - scroll, 0, 0, maskedWidth, scroll, width, height);
+            }
+        }
+
+        if (progress >= 0.0f) {
+            var clr = TreatUI.withFullAlpha(ChatFormatting.GREEN);
+            drawDurationBarWithHeight(gfx, x, y + height - 1, progress, width, 1, clr);
+        }
     }
 
     private static void drawDurationBarWithHeight(GuiGraphics gfx, int x, int y, float progress, int width, int height, int color) {

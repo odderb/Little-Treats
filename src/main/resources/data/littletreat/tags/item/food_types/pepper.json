@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "croptopia:bellpepper",
+      "required": false
+    },
+    {
+      "id": "croptopia:chile_pepper",
+      "required": false
+    }
+  ]
+}

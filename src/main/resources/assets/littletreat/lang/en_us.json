@@ -2,5 +2,9 @@
   "littletreat.configuration.title": "Little Treat Configs",
   "littletreat.configuration.section.littletreat.common.toml": "Little Treat Configs",
   "littletreat.configuration.section.littletreat.common.toml.title": "Little Treat Configs",
-  "littletreat.tooltip.dynamic_food": "Inherits ingredients effects when cooked"
+  "littletreat.tooltip.dynamic_food": "Inherits ingredients effects when cooked",
+  "littletreat.tooltip.clears_food_buffs": "Removes all active food effects",
+  "littletreat.tooltip.natural_regen": "Health regeneration is controlled by a diverse diet.",
+  "littletreat.tooltip.natural_regen_cap": "Healing up to %s hearts",
+  "littletreat.tooltip.natural_regen_none": "Eat to start regenerating"
 }

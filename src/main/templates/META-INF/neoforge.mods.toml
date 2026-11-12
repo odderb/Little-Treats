@@ -34,9 +34,11 @@ config="${mod_id}.mixins.json"
 
 [[mixins]]
 config="${mod_id}.mixins.letsdo.json"
+requiredMods=["farm_and_charm"]
 
 [[mixins]]
 config="${mod_id}.mixins.farmersdelight.json"
+requiredMods=["farmersdelight"]
 
 #[[accessTransformers]]
 #file="META-INF/accesstransformer.cfg"

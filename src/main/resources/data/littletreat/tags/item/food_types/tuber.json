@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:potato",
+    {
+      "id": "croptopia:sweetpotato",
+      "required": false
+    },
+    {
+      "id": "croptopia:yam",
+      "required": false
+    }
+  ]
+}

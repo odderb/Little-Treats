@@ -1,0 +1,10 @@
+{
+  "tag": "littletreat:food_types/dairy",
+  "modifications": [
+    {
+      "attribute": "puffish_attributes:natural_regeneration",
+      "amount": 1,
+      "op": "add_value"
+    }
+  ]
+}

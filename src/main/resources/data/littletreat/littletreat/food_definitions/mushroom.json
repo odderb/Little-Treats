@@ -1,0 +1,10 @@
+{
+  "tag": "littletreat:food_types/mushroom",
+  "modifications": [
+    {
+      "attribute": "puffish_attributes:melee_resistance",
+      "amount": 0.5,
+      "op": "add_value"
+    }
+  ]
+}

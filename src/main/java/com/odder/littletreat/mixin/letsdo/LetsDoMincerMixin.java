@@ -1,26 +1,35 @@
 package com.odder.littletreat.mixin.letsdo;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.odder.littletreat.event.RecipeAssembledEvent;
-import net.minecraft.core.HolderLookup;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.satisfy.farm_and_charm.core.recipe.MincerRecipe;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.satisfy.farm_and_charm.core.block.entity.MincerBlockEntity;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.List;
-
-@Mixin(MincerRecipe.class)
+@Mixin(MincerBlockEntity.class)
 public abstract class LetsDoMincerMixin {
-    @Shadow abstract RecipeType<?> getType();
-    @Shadow private Ingredient input;
+    private static final String TICK = "tick(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/satisfy/farm_and_charm/core/block/entity/MincerBlockEntity;)V";
 
-    @Inject(method = "getResultItem", at = @At("TAIL"))
-    private void littletreat$getResultItem(HolderLookup.Provider provider, CallbackInfoReturnable<ItemStack> ci) {
-        RecipeAssembledEvent.fromIngredients(List.of(input), ci.getReturnValue(), RecipeType.CRAFTING).post();
+    @Unique
+    private ItemStack littletreat$input = ItemStack.EMPTY;
+
+    // The input is used up before the result is created
+    @Inject(method = TICK, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;shrink(I)V"))
+    private void littletreat$captureInput(Level level, BlockPos pos, BlockState state, MincerBlockEntity mincer, CallbackInfo ci) {
+        littletreat$input = mincer.getItem(mincer.INPUT_SLOT).copy();
+    }
+
+    @ModifyExpressionValue(method = TICK, at = @At(value = "INVOKE", target = "Lnet/satisfy/farm_and_charm/core/recipe/MincerRecipe;getResultItem(Lnet/minecraft/core/HolderLookup$Provider;)Lnet/minecraft/world/item/ItemStack;"))
+    private ItemStack littletreat$getResultItem(ItemStack output) {
+        RecipeAssembledEvent.fromIngredient(littletreat$input, output, RecipeType.CRAFTING).post();
+        return output;
     }
 }

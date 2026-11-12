@@ -105,13 +105,15 @@ public class HealthRegen {
 
             // The wait after damage is one long interval, after that each heal is its own interval
             boolean waitingForFirstRegen = ticks < firstRegenTick;
+            float regenCap = regenEnabled ? getMaxNaturalRegenForPlayer(player) : 0.0f;
 
             syncRegenTimer(
                     player,
                     new SyncRegenTimerPayload(
-                            regenEnabled && player.getHealth() < getMaxNaturalRegenForPlayer(player),
+                            regenEnabled && player.getHealth() < regenCap,
                             waitingForFirstRegen ? ticks : ticks % ticksPerRegen,
-                            waitingForFirstRegen ? firstRegenTick : ticksPerRegen
+                            waitingForFirstRegen ? firstRegenTick : ticksPerRegen,
+                            regenCap
                     ),
                     event.getServer().getTickCount() % 20 == 0
             );

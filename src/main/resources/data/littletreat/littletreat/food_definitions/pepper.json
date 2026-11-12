@@ -1,0 +1,10 @@
+{
+  "tag": "littletreat:food_types/pepper",
+  "modifications": [
+    {
+      "attribute": "minecraft:generic.burning_time",
+      "amount": -0.15,
+      "op": "add_multiplied_base"
+    }
+  ]
+}

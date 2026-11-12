@@ -1,0 +1,10 @@
+{
+  "tag": "littletreat:food_types/nut",
+  "modifications": [
+    {
+      "attribute": "puffish_attributes:bow_projectile_speed",
+      "amount": 0.5,
+      "op": "add_multiplied_total"
+    }
+  ]
+}

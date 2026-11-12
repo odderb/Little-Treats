@@ -38,6 +38,16 @@ public class FoodItemCache {
                 .collect(Collectors.toCollection(HashSet::new));
     }
 
+    /**
+     * @return Edible items no food recipe makes, so they can't inherit stats. Excludes recipe ingredients, those are in {@link #getBasicIngredients()}
+     */
+    public HashSet<Holder<Item>> getUncraftedFoods(RegistryAccess registryAccess) {
+        return registryAccess.registryOrThrow(Registries.ITEM).holders()
+                .filter(item -> item.value().components().has(DataComponents.FOOD))
+                .filter(item -> !isOutput.contains(item) && !ingredients.contains(item) && !item.is(IGNORED_INGREDIENTS))
+                .collect(Collectors.toCollection(HashSet::new));
+    }
+
     public void rebuild(RecipeManager recipeManager, RegistryAccess registryAccess) {
         meals.clear();
         ingredients.clear();

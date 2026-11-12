@@ -1,13 +1,10 @@
 {
-  "items": [
-    "minecraft:chorus_fruit"
-  ],
+  "tag": "littletreat:food_types/chorus_fruit",
   "modifications": [
     {
       "attribute": "puffish_attributes:stealth",
       "amount": -5,
-      "op": "add_value",
-      "duration": 3600
+      "op": "add_value"
     }
   ]
 }

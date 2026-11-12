@@ -1,28 +1,24 @@
 package com.odder.littletreat.mixin.letsdo;
 
 import com.odder.littletreat.event.RecipeAssembledEvent;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.core.NonNullList;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.RecipeType;
-import net.satisfy.farm_and_charm.core.recipe.CookingPotRecipe;
+import net.minecraft.world.item.crafting.Recipe;
+import net.satisfy.farm_and_charm.core.block.entity.CookingPotBlockEntity;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(CookingPotRecipe.class)
+@Mixin(CookingPotBlockEntity.class)
 public abstract class LetsDoCookingPotMixin {
-    @Shadow
-    private NonNullList<Ingredient> inputs;
+    // Slots after these hold the container and finished meals
+    private static final int INGREDIENT_SLOT_COUNT = 6;
 
-    @Shadow
-    abstract RecipeType<?> getType();
+    @Inject(method = "generateOutputItem", at = @At("RETURN"))
+    private void littletreat$generateOutputItem(Recipe<?> recipe, RegistryAccess access, CallbackInfoReturnable<ItemStack> cir) {
+        var inventory = ((CookingPotBlockEntity) (Object) this).getItems();
 
-    @Inject(method = "getResultItem", at = @At("TAIL"))
-    private void littletreat$getResultItem(HolderLookup.Provider provider, CallbackInfoReturnable<ItemStack> ci) {
-        RecipeAssembledEvent.fromIngredients(inputs, ci.getReturnValue(), RecipeType.CRAFTING).post();
+        RecipeAssembledEvent.fromMatching(recipe, inventory.subList(0, INGREDIENT_SLOT_COUNT), cir.getReturnValue()).post();
     }
 }

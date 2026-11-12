@@ -1,0 +1,10 @@
+{
+  "tag": "littletreat:food_types/leafy_green",
+  "modifications": [
+    {
+      "attribute": "minecraft:generic.water_movement_efficiency",
+      "amount": 0.15,
+      "op": "add_value"
+    }
+  ]
+}

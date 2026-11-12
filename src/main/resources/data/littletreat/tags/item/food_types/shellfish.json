@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "croptopia:clam",
+      "required": false
+    },
+    {
+      "id": "croptopia:oyster",
+      "required": false
+    },
+    {
+      "id": "croptopia:crab",
+      "required": false
+    },
+    {
+      "id": "croptopia:shrimp",
+      "required": false
+    }
+  ]
+}

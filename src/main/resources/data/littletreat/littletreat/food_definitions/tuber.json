@@ -1,0 +1,10 @@
+{
+  "tag": "littletreat:food_types/tuber",
+  "modifications": [
+    {
+      "attribute": "minecraft:generic.attack_speed",
+      "amount": 2,
+      "op": "add_value"
+    }
+  ]
+}

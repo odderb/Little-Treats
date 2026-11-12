@@ -5,7 +5,7 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 
 public class Registrar {
     public static void registerPayloads(RegisterPayloadHandlersEvent event) {
-        var reg = event.registrar("1");
+        var reg = event.registrar("2");
 
         reg.playToClient(
                 SyncModificationsPayload.TYPE,

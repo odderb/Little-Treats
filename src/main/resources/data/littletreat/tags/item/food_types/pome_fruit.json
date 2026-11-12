@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:apple",
+    {
+      "id": "croptopia:pear",
+      "required": false
+    }
+  ]
+}

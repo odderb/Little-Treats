@@ -1,0 +1,10 @@
+{
+  "tag": "littletreat:food_types/meat",
+  "modifications": [
+    {
+      "attribute": "minecraft:generic.max_health",
+      "amount": 2,
+      "op": "add_value"
+    }
+  ]
+}

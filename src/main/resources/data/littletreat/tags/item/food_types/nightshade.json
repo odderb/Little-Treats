@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "croptopia:tomato",
+      "required": false
+    },
+    {
+      "id": "croptopia:tomatillo",
+      "required": false
+    },
+    {
+      "id": "croptopia:eggplant",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:tomato",
+      "required": false
+    }
+  ]
+}

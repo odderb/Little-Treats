@@ -1,0 +1,45 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "croptopia:cinnamon",
+      "required": false
+    },
+    {
+      "id": "croptopia:cinnamon_sapling",
+      "required": false
+    },
+    {
+      "id": "croptopia:nutmeg",
+      "required": false
+    },
+    {
+      "id": "croptopia:ginger",
+      "required": false
+    },
+    {
+      "id": "croptopia:turmeric",
+      "required": false
+    },
+    {
+      "id": "croptopia:pepper",
+      "required": false
+    },
+    {
+      "id": "croptopia:mustard",
+      "required": false
+    },
+    {
+      "id": "croptopia:vanilla",
+      "required": false
+    },
+    {
+      "id": "croptopia:paprika",
+      "required": false
+    },
+    {
+      "id": "croptopia:basil",
+      "required": false
+    }
+  ]
+}

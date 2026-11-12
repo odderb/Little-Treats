@@ -1,7 +1,6 @@
 {
   "required": true,
   "package": "com.odder.littletreat.mixin.farmersdelight",
-  "plugin": "com.odder.littletreat.plugins.ClassValidationMixinPlugin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "CuttingBoardRecipeMixin",

@@ -1,0 +1,10 @@
+{
+  "tag": "littletreat:food_types/stone_fruit",
+  "modifications": [
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 3,
+      "op": "add_value"
+    }
+  ]
+}

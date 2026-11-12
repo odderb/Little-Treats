@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "croptopia:blackbean",
+      "required": false
+    },
+    {
+      "id": "croptopia:soybean",
+      "required": false
+    },
+    {
+      "id": "croptopia:greenbean",
+      "required": false
+    }
+  ]
+}

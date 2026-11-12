@@ -1,0 +1,50 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:wheat",
+    {
+      "id": "#c:crops/wheat",
+      "required": false
+    },
+    {
+      "id": "croptopia:barley",
+      "required": false
+    },
+    {
+      "id": "croptopia:oat",
+      "required": false
+    },
+    {
+      "id": "croptopia:rice",
+      "required": false
+    },
+    {
+      "id": "croptopia:corn",
+      "required": false
+    },
+    {
+      "id": "croptopia:flour",
+      "required": false
+    },
+    {
+      "id": "croptopia:dough",
+      "required": false
+    },
+    {
+      "id": "croptopia:noodle",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:rice_panicle",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:rice",
+      "required": false
+    },
+    {
+      "id": "croptopia:hops",
+      "required": false
+    }
+  ]
+}

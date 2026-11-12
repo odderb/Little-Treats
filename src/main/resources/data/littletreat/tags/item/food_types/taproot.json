@@ -1,0 +1,19 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:beetroot",
+    "minecraft:carrot",
+    {
+      "id": "croptopia:radish",
+      "required": false
+    },
+    {
+      "id": "croptopia:turnip",
+      "required": false
+    },
+    {
+      "id": "croptopia:rutabaga",
+      "required": false
+    }
+  ]
+}

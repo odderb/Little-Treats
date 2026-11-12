@@ -2,6 +2,7 @@ package com.odder.littletreat.event;
 
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
@@ -41,6 +42,17 @@ public class RecipeAssembledEvent extends Event {
 
     public static RecipeAssembledEvent fromIngredient(ItemStack input, ItemStack output, RecipeType<?> recipeType) {
         return new RecipeAssembledEvent(List.of(input),  output, recipeType);
+    }
+
+    /**
+     * For machines with spare slots, uses only the items the recipe actually calls for
+     */
+    public static RecipeAssembledEvent fromMatching(Recipe<?> recipe, Collection<ItemStack> items, ItemStack output) {
+        return new RecipeAssembledEvent(
+                items.stream().filter(item -> !item.isEmpty() && recipe.getIngredients().stream().anyMatch(ingredient -> ingredient.test(item))).toList(),
+                output,
+                recipe.getType()
+        );
     }
 
     public RecipeAssembledEvent(Collection<ItemStack> inputs, ItemStack output, RecipeType<?> recipeType) {

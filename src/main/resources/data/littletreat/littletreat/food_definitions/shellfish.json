@@ -1,0 +1,10 @@
+{
+  "tag": "littletreat:food_types/shellfish",
+  "modifications": [
+    {
+      "attribute": "puffish_attributes:axe_damage",
+      "amount": 2,
+      "op": "add_value"
+    }
+  ]
+}

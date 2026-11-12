@@ -1,13 +1,10 @@
 {
-  "items": [
-    "minecraft:egg"
-  ],
+  "tag": "littletreat:food_types/egg",
   "modifications": [
     {
       "attribute": "puffish_attributes:fall_reduction",
       "amount": 0.2,
-      "op": "add_multiplied_base",
-      "duration": 3600
+      "op": "add_multiplied_base"
     }
   ]
 }

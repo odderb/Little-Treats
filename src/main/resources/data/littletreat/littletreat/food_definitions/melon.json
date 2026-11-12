@@ -1,0 +1,10 @@
+{
+  "tag": "littletreat:food_types/melon",
+  "modifications": [
+    {
+      "attribute": "minecraft:generic.max_health",
+      "amount": 4,
+      "op": "add_value"
+    }
+  ]
+}
