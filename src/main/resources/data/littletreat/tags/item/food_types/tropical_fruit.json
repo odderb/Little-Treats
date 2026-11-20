@@ -2,6 +2,30 @@
   "replace": false,
   "values": [
     {
+      "id": "#c:crops/banana",
+      "required": false
+    },
+    {
+      "id": "#c:crops/pineapple",
+      "required": false
+    },
+    {
+      "id": "#c:crops/mango",
+      "required": false
+    },
+    {
+      "id": "#c:crops/coconut",
+      "required": false
+    },
+    {
+      "id": "#c:crops/kiwi",
+      "required": false
+    },
+    {
+      "id": "#c:crops/avocado",
+      "required": false
+    },
+    {
       "id": "croptopia:banana",
       "required": false
     },

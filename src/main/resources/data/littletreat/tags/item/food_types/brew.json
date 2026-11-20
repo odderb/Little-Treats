@@ -2,6 +2,22 @@
   "replace": false,
   "values": [
     {
+      "id": "#c:crops/coffee",
+      "required": false
+    },
+    {
+      "id": "#c:crops/coffee_beans",
+      "required": false
+    },
+    {
+      "id": "#c:crops/tea",
+      "required": false
+    },
+    {
+      "id": "#c:crops/tea_leaves",
+      "required": false
+    },
+    {
       "id": "#c:coffee_beans",
       "required": false
     },

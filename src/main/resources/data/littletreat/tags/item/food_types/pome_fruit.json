@@ -3,6 +3,10 @@
   "values": [
     "minecraft:apple",
     {
+      "id": "#c:crops/pear",
+      "required": false
+    },
+    {
       "id": "croptopia:pear",
       "required": false
     }

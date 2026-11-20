@@ -2,6 +2,22 @@
   "replace": false,
   "values": [
     {
+      "id": "#c:crops/peanut",
+      "required": false
+    },
+    {
+      "id": "#c:crops/almond",
+      "required": false
+    },
+    {
+      "id": "#c:crops/cashew",
+      "required": false
+    },
+    {
+      "id": "#c:crops/pecan",
+      "required": false
+    },
+    {
       "id": "#c:nuts",
       "required": false
     },

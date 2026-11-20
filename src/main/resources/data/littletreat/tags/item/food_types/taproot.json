@@ -4,6 +4,22 @@
     "minecraft:beetroot",
     "minecraft:carrot",
     {
+      "id": "#c:crops/carrot",
+      "required": false
+    },
+    {
+      "id": "#c:crops/beetroot",
+      "required": false
+    },
+    {
+      "id": "#c:crops/radish",
+      "required": false
+    },
+    {
+      "id": "#c:crops/turnip",
+      "required": false
+    },
+    {
       "id": "croptopia:radish",
       "required": false
     },

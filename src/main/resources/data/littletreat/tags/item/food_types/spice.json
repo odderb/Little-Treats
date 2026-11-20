@@ -2,6 +2,26 @@
   "replace": false,
   "values": [
     {
+      "id": "#c:crops/ginger",
+      "required": false
+    },
+    {
+      "id": "#c:crops/turmeric",
+      "required": false
+    },
+    {
+      "id": "#c:crops/vanilla",
+      "required": false
+    },
+    {
+      "id": "#c:crops/basil",
+      "required": false
+    },
+    {
+      "id": "#c:crops/cinnamon",
+      "required": false
+    },
+    {
       "id": "croptopia:cinnamon",
       "required": false
     },

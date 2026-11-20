@@ -2,6 +2,18 @@
   "replace": false,
   "values": [
     {
+      "id": "#c:crops/tomato",
+      "required": false
+    },
+    {
+      "id": "#c:crops/eggplant",
+      "required": false
+    },
+    {
+      "id": "#c:crops/tomatillo",
+      "required": false
+    },
+    {
       "id": "croptopia:tomato",
       "required": false
     },

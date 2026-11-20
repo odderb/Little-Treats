@@ -107,6 +107,10 @@ public record AttributeModificationDefinition(
         return Optional.of(Math.max(a.duration().get(), b.duration().get()));
     }
 
+    public AttributeModificationDefinition withLongestDuration(AttributeModificationDefinition other) {
+        return new AttributeModificationDefinition(attribute, amount, op, longestDuration(this, other));
+    }
+
     public AttributeModificationDefinition withDefaultDuration(int defaultDuration) {
         return duration.isPresent() ? this : new AttributeModificationDefinition(attribute, amount, op, Optional.of(defaultDuration));
     }

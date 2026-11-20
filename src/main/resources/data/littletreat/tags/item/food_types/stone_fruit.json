@@ -2,6 +2,22 @@
   "replace": false,
   "values": [
     {
+      "id": "#c:crops/cherry",
+      "required": false
+    },
+    {
+      "id": "#c:crops/peach",
+      "required": false
+    },
+    {
+      "id": "#c:crops/plum",
+      "required": false
+    },
+    {
+      "id": "#c:crops/apricot",
+      "required": false
+    },
+    {
       "id": "croptopia:apricot",
       "required": false
     },

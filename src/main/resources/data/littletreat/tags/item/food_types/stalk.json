@@ -2,6 +2,22 @@
   "replace": false,
   "values": [
     {
+      "id": "#c:crops/celery",
+      "required": false
+    },
+    {
+      "id": "#c:crops/asparagus",
+      "required": false
+    },
+    {
+      "id": "#c:crops/rhubarb",
+      "required": false
+    },
+    {
+      "id": "#c:crops/artichoke",
+      "required": false
+    },
+    {
       "id": "croptopia:asparagus",
       "required": false
     },

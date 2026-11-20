@@ -3,6 +3,22 @@
   "values": [
     "minecraft:pumpkin",
     {
+      "id": "#c:crops/pumpkin",
+      "required": false
+    },
+    {
+      "id": "#c:crops/squash",
+      "required": false
+    },
+    {
+      "id": "#c:crops/zucchini",
+      "required": false
+    },
+    {
+      "id": "#c:crops/cucumber",
+      "required": false
+    },
+    {
       "id": "croptopia:squash",
       "required": false
     },

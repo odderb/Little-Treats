@@ -1,6 +1,10 @@
 {
   "replace": false,
   "values": [
-    "minecraft:cocoa_beans"
+    "minecraft:cocoa_beans",
+    {
+      "id": "#c:crops/cocoa_bean",
+      "required": false
+    }
   ]
 }

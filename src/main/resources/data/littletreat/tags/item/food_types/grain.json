@@ -3,6 +3,26 @@
   "values": [
     "minecraft:wheat",
     {
+      "id": "#c:crops/rice",
+      "required": false
+    },
+    {
+      "id": "#c:crops/barley",
+      "required": false
+    },
+    {
+      "id": "#c:crops/oat",
+      "required": false
+    },
+    {
+      "id": "#c:crops/corn",
+      "required": false
+    },
+    {
+      "id": "#c:foods/dough",
+      "required": false
+    },
+    {
       "id": "#c:crops/wheat",
       "required": false
     },

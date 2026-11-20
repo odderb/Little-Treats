@@ -3,6 +3,10 @@
   "values": [
     "minecraft:sugar",
     {
+      "id": "#c:drinks/honey",
+      "required": false
+    },
+    {
       "id": "croptopia:molasses",
       "required": false
     },

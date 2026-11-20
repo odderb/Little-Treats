@@ -1,0 +1,117 @@
+# Builds the NeoForge jar for a pushed version tag and publishes it as a GitHub release, then (optionally)
+# uploads it to CurseForge.
+#
+#   git tag v0.3.2 && git push origin v0.3.2
+#
+# The tag sets the version (a leading "v" is dropped), overriding `mod_version` in gradle.properties, so the jar
+# is named littletreat-0.3.2.jar. Tags with a hyphen (v0.4.0-beta.1) are marked as pre-releases (and as beta files
+# on CurseForge).
+#
+# CurseForge upload: skipped until it's set up. In the repo's Settings:
+#   1. Environments > New environment "curseforge":
+#        - Deployment branches and tags: "Selected branches and tags", add a tag rule "v*"
+#        - optionally Required reviewers: you, so every upload waits for your approval
+#        - Environment secrets: CURSEFORGE_TOKEN, an API token from https://legacy.curseforge.com/account/api-tokens
+#   2. Secrets and variables > Actions > Variables: CURSEFORGE_PROJECT_ID, the project ID (number) from the
+#      CurseForge project page's sidebar. Not secret; it turns the upload job on.
+# The token lives only in that environment, so only the curseforge job below can read it.
+#
+# Every action is pinned to a full commit SHA (the version is in the comment), so a moved or hijacked tag can't
+# swap in different code. To update one, look up the new release's commit and change both.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the GitHub release
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      type: ${{ steps.version.outputs.type }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+
+      - name: Version from tag
+        id: version
+        run: |
+          echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
+            echo "type=beta" >> "$GITHUB_OUTPUT"
+          else
+            echo "type=release" >> "$GITHUB_OUTPUT"
+          fi
+
+      # gradlew isn't committed as executable in this repo
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      # mod_version (not version): build.gradle sets version from it, and it also fills neoforge.mods.toml
+      - name: Build
+        run: ./gradlew build -Pmod_version=${{ steps.version.outputs.version }} --no-daemon
+
+      - name: Collect jar
+        run: |
+          mkdir dist
+          find build/libs -maxdepth 1 -name '*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' \
+            -exec cp {} dist/ \;
+          ls -l dist
+          test "$(ls dist | wc -l)" -eq 1
+
+      - uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
+        with:
+          name: Little Treat ${{ steps.version.outputs.version }}
+          files: dist/*.jar
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          fail_on_unmatched_files: true
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: jars
+          path: dist/*.jar
+          if-no-files-found: error
+          retention-days: 7
+
+  curseforge:
+    needs: release
+    if: vars.CURSEFORGE_PROJECT_ID != ''
+    runs-on: ubuntu-latest
+    environment: curseforge
+    steps:
+      # Only the built jar: no checkout, no build, so nothing from the repo runs next to the token.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: jars
+          path: dist
+
+      - name: CurseForge
+        uses: Kir-Antipov/mc-publish@c23376546a97f5ba7984e94445da359459b14419 # v3.3.2
+        with:
+          curseforge-id: ${{ vars.CURSEFORGE_PROJECT_ID }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          files: dist/littletreat-*.jar
+          name: Little Treat ${{ needs.release.outputs.version }}
+          version: ${{ needs.release.outputs.version }}
+          version-type: ${{ needs.release.outputs.type }}
+          loaders: neoforge
+          game-versions: 1.21.1
+          java: 21
+          dependencies: |
+            puffish-attributes(required)

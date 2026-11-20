@@ -2,6 +2,22 @@
   "replace": false,
   "values": [
     {
+      "id": "#c:crops/bellpepper",
+      "required": false
+    },
+    {
+      "id": "#c:crops/bell_pepper",
+      "required": false
+    },
+    {
+      "id": "#c:crops/chile_pepper",
+      "required": false
+    },
+    {
+      "id": "#c:crops/chili_pepper",
+      "required": false
+    },
+    {
       "id": "croptopia:bellpepper",
       "required": false
     },

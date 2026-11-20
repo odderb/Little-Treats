@@ -2,6 +2,26 @@
   "replace": false,
   "values": [
     {
+      "id": "#c:crops/soybean",
+      "required": false
+    },
+    {
+      "id": "#c:crops/bean",
+      "required": false
+    },
+    {
+      "id": "#c:crops/blackbean",
+      "required": false
+    },
+    {
+      "id": "#c:crops/greenbean",
+      "required": false
+    },
+    {
+      "id": "#c:crops/peas",
+      "required": false
+    },
+    {
       "id": "croptopia:blackbean",
       "required": false
     },

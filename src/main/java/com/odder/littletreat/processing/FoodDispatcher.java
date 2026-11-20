@@ -69,10 +69,7 @@ public class FoodDispatcher {
     public static List<AttributeModificationDefinition> collectModifications(ItemStack eaten) {
         List<AttributeModificationDefinition> modifications = new ArrayList<>();
 
-        if (!isFood(eaten)) {
-            return modifications;
-        }
-
+        // Not limited to edible items, so ingredients like mushrooms can still show their stats
         FoodStats stats = currentStats();
         modifications.addAll(stats.getGroupModifications(eaten.getItem()));
 
@@ -101,10 +98,13 @@ public class FoodDispatcher {
     public static void applyRecipeComposition(ItemStack stack) {
         if (stack.has(DataComponents.INHERITED_MODIFICATIONS)) return;
 
-        INSTANCE.stats.findComposition(stack.getItem()).ifPresent(composition -> {
-            stack.set(DataComponents.INHERITED_MODIFICATIONS, composition.modifications());
-            stack.set(DataComponents.INHERITED_NUTRITION, composition.nutrition());
-        });
+        INSTANCE.stats.findComposition(stack.getItem())
+                // Matches crafted food made from nothing with stats, which carries no components
+                .filter(composition -> !composition.modifications().isEmpty())
+                .ifPresent(composition -> {
+                    stack.set(DataComponents.INHERITED_MODIFICATIONS, composition.modifications());
+                    stack.set(DataComponents.INHERITED_NUTRITION, composition.nutrition());
+                });
     }
 
     public static List<AttributeModificationDefinition> getGroupModifications(Item item) {

@@ -2,6 +2,26 @@
   "replace": false,
   "values": [
     {
+      "id": "#c:crops/cabbage",
+      "required": false
+    },
+    {
+      "id": "#c:crops/lettuce",
+      "required": false
+    },
+    {
+      "id": "#c:crops/spinach",
+      "required": false
+    },
+    {
+      "id": "#c:crops/kale",
+      "required": false
+    },
+    {
+      "id": "#c:foods/leafy_green",
+      "required": false
+    },
+    {
       "id": "croptopia:cabbage",
       "required": false
     },

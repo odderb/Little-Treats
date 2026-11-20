@@ -190,6 +190,9 @@ public class ClientState {
                     Component.translatable(mod.attribute().value().getDescriptionId()).append(": ").append(value));
         }
 
+        // Ingredients that can't be eaten on their own have no duration to show
+        if (FoodDispatcher.getNutrition(stack) <= 0) return;
+
         int duration = ActiveModificationDefinition.calculateDuration(mods);
         String time = StringUtil.formatTickDuration(duration, Minecraft.getInstance().level.tickRateManager().tickrate());
         event.getToolTip().add(Component.literal(String.format("(%s)", time)).withStyle(ChatFormatting.GRAY));

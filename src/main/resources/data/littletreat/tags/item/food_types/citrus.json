@@ -2,6 +2,22 @@
   "replace": false,
   "values": [
     {
+      "id": "#c:crops/lemon",
+      "required": false
+    },
+    {
+      "id": "#c:crops/lime",
+      "required": false
+    },
+    {
+      "id": "#c:crops/orange",
+      "required": false
+    },
+    {
+      "id": "#c:crops/grapefruit",
+      "required": false
+    },
+    {
       "id": "croptopia:lemon",
       "required": false
     },

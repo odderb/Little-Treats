@@ -14,49 +14,58 @@ import net.neoforged.fml.util.thread.EffectiveSide;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class RecipeProcessor {
 
+    /**
+     * Merges modifiers sharing an attribute and operation. The result has to be identical for the same set of
+     * inputs regardless of their order, since stacks only merge when their components are equal.
+     */
     public List<AttributeModificationDefinition> getFlattenModifiers(Collection<AttributeModificationDefinition> mods) {
-        HashMap<Holder<Attribute>, List<AttributeModificationDefinition>> similar = new HashMap<>();
+        Map<Holder<Attribute>, Map<AttributeModifier.Operation, List<AttributeModificationDefinition>>> grouped = new LinkedHashMap<>();
+
+        for (AttributeModificationDefinition mod : mods) {
+            grouped.computeIfAbsent(mod.attribute(), attr -> new EnumMap<>(AttributeModifier.Operation.class))
+                    .computeIfAbsent(mod.op(), op -> new ArrayList<>())
+                    .add(mod);
+        }
+
         List<AttributeModificationDefinition> flattened = new ArrayList<>();
 
-        for(AttributeModificationDefinition mod : mods) {
-            if (!similar.containsKey(mod.attribute())) {
-                similar.put(mod.attribute(), new ArrayList<>());
-            }
+        grouped.forEach((attr, byOp) -> byOp.forEach((op, group) -> {
+            // Summed in a fixed order, floating point addition depends on it
+            double amount = group.stream()
+                    .mapToDouble(AttributeModificationDefinition::amount)
+                    .sorted()
+                    .sum();
 
-            similar.get(mod.attribute()).add(mod);
-        }
+            Optional<Integer> duration = group.stream()
+                    .reduce(AttributeModificationDefinition::withLongestDuration)
+                    .flatMap(AttributeModificationDefinition::duration);
 
-        for (Holder<Attribute> attr : similar.keySet()) {
-            HashMap<AttributeModifier.Operation, List<AttributeModificationDefinition>> similarOperations = new HashMap<>();
-            for (AttributeModificationDefinition mod : similar.get(attr)) {
-                if (!similarOperations.containsKey(mod.op())) {
-                    similarOperations.put(mod.op(), new ArrayList<>());
-                }
+            flattened.add(new AttributeModificationDefinition(attr, roundAmount(amount), op, duration));
+        }));
 
-                similarOperations.get(mod.op()).add(mod);
-            }
-
-            for (AttributeModifier.Operation op :  similarOperations.keySet()) {
-                var res = similarOperations.get(op).stream().reduce(
-                        (a, b) -> new AttributeModificationDefinition(
-                                attr,
-                                a.amount()+b.amount(),
-                                op,
-                                AttributeModificationDefinition.longestDuration(a, b)
-                        )
-                );
-
-                res.ifPresent(flattened::add);
-            }
-        }
-
+        flattened.sort(MODIFIER_ORDER);
         return flattened;
+    }
+
+    private static final Comparator<AttributeModificationDefinition> MODIFIER_ORDER = Comparator
+            .<AttributeModificationDefinition, String>comparing(mod -> mod.attribute().getRegisteredName())
+            .thenComparing(AttributeModificationDefinition::op);
+
+    /**
+     * Different ingredient combinations reaching the same total shouldn't differ by rounding error
+     */
+    private static double roundAmount(double amount) {
+        return Math.round(amount * 1_000_000.0) / 1_000_000.0;
     }
 
     /**
@@ -78,6 +87,13 @@ public class RecipeProcessor {
                 .toList();
 
         modifiers = getFlattenModifiers(modifiers);
+
+        // An empty list isn't equal to no component, and would stop this stacking with uncrafted copies
+        if (modifiers.isEmpty()) {
+            output.remove(DataComponents.INHERITED_MODIFICATIONS);
+            output.remove(DataComponents.INHERITED_NUTRITION);
+            return;
+        }
 
         output.set(DataComponents.INHERITED_MODIFICATIONS, modifiers);
         output.set(DataComponents.INHERITED_NUTRITION, inputs.stream().mapToInt(FoodDispatcher::getNutrition).sum());

@@ -2,6 +2,14 @@
   "replace": false,
   "values": [
     {
+      "id": "#c:crops/broccoli",
+      "required": false
+    },
+    {
+      "id": "#c:crops/cauliflower",
+      "required": false
+    },
+    {
       "id": "croptopia:broccoli",
       "required": false
     },
