@@ -40,6 +40,10 @@ requiredMods=["farm_and_charm"]
 config="${mod_id}.mixins.farmersdelight.json"
 requiredMods=["farmersdelight"]
 
+[[mixins]]
+config="${mod_id}.mixins.cookingforblockheads.json"
+requiredMods=["cookingforblockheads"]
+
 #[[accessTransformers]]
 #file="META-INF/accesstransformer.cfg"
 

@@ -3,8 +3,8 @@
 #
 #   git tag v0.3.2 && git push origin v0.3.2
 #
-# The tag sets the version (a leading "v" is dropped), overriding `mod_version` in gradle.properties, so the jar
-# is named littletreat-0.3.2.jar. Tags with a hyphen (v0.4.0-beta.1) are marked as pre-releases (and as beta files
+# The tag sets the version (a leading "v" is dropped), passed to Gradle as `mod_version`, so the jar is named
+# littletreat-0.3.2.jar. Local builds work it out from `git describe` instead. Tags with a hyphen (v0.4.0-beta.1) are marked as pre-releases (and as beta files
 # on CurseForge).
 #
 # CurseForge upload: skipped until it's set up. In the repo's Settings:
@@ -62,7 +62,8 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
-      # mod_version (not version): build.gradle sets version from it, and it also fills neoforge.mods.toml
+      # mod_version (not version): build.gradle sets version from it, and it also fills neoforge.mods.toml.
+      # Passed explicitly since this checkout is shallow, without the tags git describe would need.
       - name: Build
         run: ./gradlew build -Pmod_version=${{ steps.version.outputs.version }} --no-daemon
 

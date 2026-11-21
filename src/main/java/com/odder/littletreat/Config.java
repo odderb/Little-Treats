@@ -14,6 +14,9 @@ public class Config {
     public static final ModConfigSpec.DoubleValue GLOBAL_TIME_MULTIPLIER = BUILDER.defineInRange("globalTimeMultiplier", 1.0, 0.0, Double.MAX_VALUE);
     public static final ModConfigSpec.BooleanValue IGNORE_POTION_RENDERING = BUILDER.define("ignorePotionRendering", false);
     public static final ModConfigSpec.DoubleValue LOW_FOOD_WARNING_PERCENT = BUILDER.defineInRange("lowFoodWarningPercent", 0.333, 0.0, 1.0);
+    public static final ModConfigSpec.BooleanValue DISABLE_WARNING_MESSAGES = BUILDER
+            .comment("Stops Little Treat sending warnings in chat, like a mod integration being disabled. They're still written to the log.")
+            .define("disableWarningMessages", false);
 
     static final ModConfigSpec SPEC = BUILDER.build();
 }

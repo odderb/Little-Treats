@@ -9,7 +9,16 @@ tasks.named('wrapper', Wrapper).configure {
     distributionType = Wrapper.DistributionType.BIN
 }
 
-version = mod_version
+// The version comes from the latest v* git tag: v0.4.0 builds as 0.4.0, later commits as 0.4.0-3-gabc1234, with
+// -dirty for uncommitted changes. -Pmod_version=<version> overrides it, the release workflow passes the tag that way.
+var modVersion = providers.gradleProperty("mod_version").orElse(
+        providers.exec {
+            commandLine 'git', 'describe', '--tags', '--match', 'v*', '--dirty'
+            ignoreExitValue = true
+        }.standardOutput.asText.map { it.trim().replaceFirst(/^v/, '') }
+).map { it.isEmpty() ? "0.0.0-untagged" : it }.get()
+
+version = modVersion
 group = mod_group_id
 
 sourceSets.main.resources {
@@ -49,6 +58,29 @@ repositories {
         name = "Epherical Maven"
         url = "https://maven.epherical.com/releases"
     }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        filter {
+            includeGroup "maven.modrinth"
+        }
+    }
+    exclusiveContent {
+        forRepository {
+            maven {
+                // BlayTheNinth's maven, hosts Cooking for Blockheads and Balm
+                name = "TwelveIterations"
+                url = "https://maven.twelveiterations.com/repository/maven-public/"
+            }
+        }
+        filter {
+            includeGroup "net.blay09.mods"
+        }
+    }
 }
 
 base {
@@ -69,6 +101,11 @@ neoForge {
         client {
             client()
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+
+            // -Pworld="<save folder>" skips the title screen and loads straight into that world in run/saves
+            if (project.hasProperty("world")) {
+                programArguments.addAll '--quickPlaySingleplayer', project.property("world").toString()
+            }
         }
 
         server {
@@ -114,15 +151,18 @@ dependencies {
     compileOnly "curse.maven:farmers-delight-398521:${farmers_delight_file_id}"
     compileOnly "curse.maven:croptopia-415438:${croptopia_file_id}"
     compileOnly "curse.maven:epherolib-885449:5872111"
+    compileOnly("net.blay09.mods:cookingforblockheads-neoforge:${cooking_for_blockheads_version}") { transitive = false }
+    compileOnly("net.blay09.mods:balm-neoforge:${balm_version}") { transitive = false }
 
     // maven was down when I tried this, falling back to curse maven for now..
 //    compileOnly "com.epherical.epherolib:EpheroLib-neoforge:1.0.0-${minecraft_version}"
 
     localRuntime "curse.maven:lootr-361276:8428025"
 
-    if (project.hasProperty("withJEI")) {
-        localRuntime "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
-    }
+    // Dev conveniences, always present in every run
+    localRuntime "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
+    localRuntime "maven.modrinth:jade:${jade_version}"
+    localRuntime "curse.maven:configured-457570:${configured_file_id}"
 
     // will include ALL lets do mods
     if (project.hasProperty("withLetsDo")) {
@@ -139,6 +179,12 @@ dependencies {
         localRuntime "curse.maven:croptopia-415438:${croptopia_file_id}"
         localRuntime "curse.maven:epherolib-885449:5872111"
     }
+
+    if (project.hasProperty("withBlockheads")) {
+        // Not transitive, the published pom points at a Balm snapshot that may no longer resolve
+        localRuntime("net.blay09.mods:cookingforblockheads-neoforge:${cooking_for_blockheads_version}") { transitive = false }
+        localRuntime("net.blay09.mods:balm-neoforge:${balm_version}") { transitive = false }
+    }
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
@@ -150,7 +196,7 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
             mod_id                 : mod_id,
             mod_name               : mod_name,
             mod_license            : mod_license,
-            mod_version            : mod_version,
+            mod_version            : modVersion,
             attributes_version     : attributes_version,
     ]
     inputs.properties replaceProperties

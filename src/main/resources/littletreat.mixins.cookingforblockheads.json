@@ -1,0 +1,20 @@
+{
+  "required": false,
+  "package": "com.odder.littletreat.mixin.cookingforblockheads",
+  "plugin": "com.odder.littletreat.mixin.cookingforblockheads.BlockheadsMixinPlugin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "BlockheadsOvenMixin",
+    "BlockheadsToasterRecipeMixin",
+    "KitchenMenuAccessor"
+  ],
+  "client": [
+    "SortButtonMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 0
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

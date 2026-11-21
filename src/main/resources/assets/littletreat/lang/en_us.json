@@ -6,5 +6,12 @@
   "littletreat.tooltip.clears_food_buffs": "Removes all active food effects",
   "littletreat.tooltip.natural_regen": "Health regeneration is controlled by a diverse diet.",
   "littletreat.tooltip.natural_regen_cap": "Healing up to %s hearts",
-  "littletreat.tooltip.natural_regen_none": "Eat to start regenerating"
+  "littletreat.tooltip.natural_regen_none": "Eat to start regenerating",
+  "littletreat.kitchen_sort.effects": "Sort by Number of Effects",
+  "littletreat.kitchen_sort.duration": "Sort by Total Effect Duration",
+  "littletreat.kitchen_sort.ascending": "(Asc.)",
+  "littletreat.kitchen_sort.descending": "(Desc.)",
+  "littletreat.configuration.disableWarningMessages": "Disable Warning Messages",
+  "littletreat.configuration.disableWarningMessages.tooltip": "Stops Little Treat sending warnings in chat, like a mod integration being disabled. They're still written to the log.",
+  "littletreat.warning.blockheads_disabled": "Little Treats integration with Cooking For Blockheads has been disabled due to mixin incompatibility, report this to the Little Treats dev. You can disable this message under Little Treat options."
 }

@@ -1,6 +1,7 @@
 package com.odder.littletreat;
 
 import com.odder.littletreat.command.ClientCommands;
+import com.odder.littletreat.compat.cookingforblockheads.BlockheadsCompat;
 import com.odder.littletreat.command.TreatCommands;
 import com.odder.littletreat.init.Attachments;
 import com.odder.littletreat.init.DataComponents;
@@ -50,5 +51,10 @@ public class LittleTreat {
         NeoForge.EVENT_BUS.register(recipeProcessor);
         NeoForge.EVENT_BUS.addListener(TreatCommands::onRegisterCommands);
         NeoForge.EVENT_BUS.register(healthRegen);
+        NeoForge.EVENT_BUS.register(Warnings.class);
+
+        if (ModList.get().isLoaded(BlockheadsCompat.MOD_ID)) {
+            BlockheadsCompat.init(modEventBus);
+        }
     }
 }
