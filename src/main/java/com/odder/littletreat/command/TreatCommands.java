@@ -41,6 +41,7 @@ public class TreatCommands {
                         .then(getForceSyncCommand())
                         .then(getDumpModificationsCommand())
                         .then(getDumpAttributeModifiersCommand(event))
+                        .then(GiveIngredientsCommand.build(event.getBuildContext()))
         );
     }
 
